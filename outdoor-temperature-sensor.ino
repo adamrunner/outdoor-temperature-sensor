@@ -115,28 +115,6 @@ bool sendTemperatureMessage(float temperatureFloat) {
   return result;
 }
 
-bool sendBatteryMessage(float batteryFloat) {
-  Serial.println("sendBatteryMessage called");
-  char batteryString[7];
-  // dtostrf(FLOAT,WIDTH,PRECSISION,BUFFER);
-  dtostrf(batteryFloat,4,2,batteryString);
-  char  message[25];
-  sprintf(message, "BATTERY,%s,%s", currentHostname, batteryString);
-  bool result = sendMessage("data", message);
-  return result;
-}
-
-bool newSendTempMessage(float temperatureFloat) {
-  Serial.println("newSendTempMessage called");
-  char temperatureString[7];
-  // dtostrf(FLOAT,WIDTH,PRECSISION,BUFFER);
-  dtostrf(temperatureFloat,4,2,temperatureString);
-  char  message[25];
-  sprintf(message, "TEMP,%s,%s", currentHostname, temperatureString);
-  bool result = sendMessage("data", message);
-  return result;
-}
-
 bool sendMessage(char* topic, char* message){
   reconnect();
   client.loop();
@@ -147,7 +125,16 @@ bool sendMessage(char* topic, char* message){
   Serial.print("result: ");
   Serial.println(result);
   client.loop();
+  return result;
+}
 
+bool sendMessage_v2(char* hostname, char* temperature, char* battery)
+{
+// HOSTNAME:ESP_298F92,TEMP:71.04,BATTERY:4
+  char message[48];
+  sprintf(message, "HOSTNAME:%s,TEMP:%s,BATTERY:%s", hostname, temperature, battery);
+  serialLogMessage("data", message);
+  bool result = sendMessage("data", message);
   return result;
 }
 
@@ -191,27 +178,32 @@ bool invalidTempReading(float temp){
 
 void loop(){
   float temp = 0.000;
-  float battery = 0.000;
+  float batt = 0.000;
   client.loop();
 
   while(invalidTempReading(temp) && millis() > (lastTempReadAt + TEMP_READ_INTERVAL_MS) ){
     // read the temperature from the sensor constantly
     // if there isnt a good reading
     temp = getTemp();
-    battery = fuelGauge.stateOfCharge();
+    batt = fuelGauge.stateOfCharge();
     Serial.print("Temp: ");
     Serial.println(temp);
     Serial.print("Batt: ");
-    Serial.println(battery);
+    Serial.println(batt);
   }
   // if we haven't sent a successful update
   // if it's time to send an update and we've got a valid temperature
   // send the update
   if(!result) {
     if(millis() > (lastTempMessageSentAt + TEMP_MESSAGE_INTERVAL_MS) && !invalidTempReading(temp) ){
-      newSendTempMessage(temp);
-      sendBatteryMessage(battery);
+
+      char battery[4];
+      char temperature[4];
+      dtostrf(batt,4,2,battery);
+      dtostrf(temp,4,2,temperature);
+      sendMessage_v2(currentHostname, temperature, battery);
       result = sendTemperatureMessage(temp);
+      // continue with v1
       if(result){
         lastTempMessageSentAt = millis();
       }
