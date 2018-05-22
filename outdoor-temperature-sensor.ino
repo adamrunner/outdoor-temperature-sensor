@@ -130,7 +130,7 @@ bool sendMessage(char* topic, char* message){
 
 bool sendMessage_v2(char* hostname, char* temperature, char* battery)
 {
-// HOSTNAME:ESP_298F92,TEMP:71.04,BATTERY:4
+
   char message[48];
   sprintf(message, "HOSTNAME:%s,TEMP:%s,BATTERY:%s", hostname, temperature, battery);
   serialLogMessage("data", message);
@@ -179,6 +179,8 @@ bool invalidTempReading(float temp){
 void loop(){
   float temp = 0.000;
   float batt = 0.000;
+  char battery[10];
+  char temperature[10];
   client.loop();
 
   while(invalidTempReading(temp) && millis() > (lastTempReadAt + TEMP_READ_INTERVAL_MS) ){
@@ -189,7 +191,9 @@ void loop(){
     Serial.print("Temp: ");
     Serial.println(temp);
     Serial.print("Batt: ");
-    Serial.println(batt);
+    dtostrf(batt,4,2,battery);
+    Serial.println(battery);
+
   }
   // if we haven't sent a successful update
   // if it's time to send an update and we've got a valid temperature
@@ -197,9 +201,6 @@ void loop(){
   if(!result) {
     if(millis() > (lastTempMessageSentAt + TEMP_MESSAGE_INTERVAL_MS) && !invalidTempReading(temp) ){
 
-      char battery[4];
-      char temperature[4];
-      dtostrf(batt,4,2,battery);
       dtostrf(temp,4,2,temperature);
       sendMessage_v2(currentHostname, temperature, battery);
       result = sendTemperatureMessage(temp);
