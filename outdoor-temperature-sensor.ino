@@ -128,11 +128,11 @@ bool sendMessage(char* topic, char* message){
   return result;
 }
 
-bool sendMessage_v2(char* hostname, char* temperature, char* battery)
+bool sendMessage_v2(char* hostname, char* temperature, char* battery, char* voltage)
 {
 
   char message[48];
-  sprintf(message, "HOSTNAME:%s,TEMP:%s,BATTERY:%s", hostname, temperature, battery);
+  sprintf(message, "HOSTNAME:%s,TEMP:%s,BATTERY:%s,VOLTAGE:%s", hostname, temperature, battery, voltage);
   serialLogMessage("data", message);
   bool result = sendMessage("data", message);
   return result;
@@ -179,8 +179,10 @@ bool invalidTempReading(float temp){
 void loop(){
   float temp = 0.000;
   float batt = 0.000;
+  float volt = 0.000;
   char battery[10];
   char temperature[10];
+  char voltage[10];
   client.loop();
 
   while(invalidTempReading(temp) && millis() > (lastTempReadAt + TEMP_READ_INTERVAL_MS) ){
@@ -188,11 +190,18 @@ void loop(){
     // if there isnt a good reading
     temp = getTemp();
     batt = fuelGauge.stateOfCharge();
-    Serial.print("Temp: ");
-    Serial.println(temp);
-    Serial.print("Batt: ");
+    volt = fuelGauge.getVoltage();
+
+    dtostrf(temp,4,2,temperature);
     dtostrf(batt,4,2,battery);
+    dtostrf(volt,4,2,voltage);
+
+    Serial.print("Temperature: ");
+    Serial.println(temperature);
+    Serial.print("Battery: ");
     Serial.println(battery);
+    Serial.print("Voltage: ");
+    Serial.println(voltage);
 
   }
   // if we haven't sent a successful update
@@ -201,8 +210,8 @@ void loop(){
   if(!result) {
     if(millis() > (lastTempMessageSentAt + TEMP_MESSAGE_INTERVAL_MS) && !invalidTempReading(temp) ){
 
-      dtostrf(temp,4,2,temperature);
-      sendMessage_v2(currentHostname, temperature, battery);
+
+      sendMessage_v2(currentHostname, temperature, battery, voltage);
       result = sendTemperatureMessage(temp);
       // continue with v1
       if(result){

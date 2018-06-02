@@ -6,7 +6,7 @@
  * mattnewberry@me.com                                                     *
  *                                                                         *
  ***************************************************************************
- *                                                                         * 
+ *                                                                         *
  * This program is free software; you can redistribute it and/or modify    *
  * it under the terms of the GNU License.                                  *
  * This program is distributed in the hope that it will be useful,         *
@@ -24,6 +24,7 @@
 #define MAX1704_ADDR            0x36
 #define MAX1704_SOC             0x04
 #define MAX1704_VERSION         0x08
+#define MAX1704_VCELL_ADDR      0x02
 #define MAX1704_POWER_ON_RESET  0x54
 #define MAX1704_QUICK_START     0x40
 #define MAX1704_CONFIG          0x0C
@@ -31,9 +32,10 @@
 #define MAX1704_ALERT_LEVEL     0x97
 
 class MAX1704{
-    
+
 public:
   float stateOfCharge();
+  float getVoltage();
   void showConfig();
   void reset();
   void quickStart();
@@ -44,8 +46,8 @@ public:
   boolean isAlerting();
   void sleep();
   void awake();
-  
-    
+
+
 private:
   void performCommand(byte address, int value);
   void readFrom(byte address, byte &msb, byte &lsb);

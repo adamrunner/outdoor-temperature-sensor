@@ -6,7 +6,7 @@
  * mattnewberry@me.com                                                     *
  *                                                                         *
  ***************************************************************************
- *                                                                         * 
+ *                                                                         *
  * This program is free software; you can redistribute it and/or modify    *
  * it under the terms of the GNU License.                                  *
  * This program is distributed in the hope that it will be useful,         *
@@ -33,13 +33,22 @@ float MAX1704::stateOfCharge(){
   return percentage;
 }
 
+float MAX1704::getVoltage()
+{
+	Wire.beginTransmission(MAX1704_ADDR);
+	Wire.write(MAX1704_VCELL_ADDR);
+	Wire.endTransmission(false);
+	Wire.requestFrom(MAX1704_ADDR, 2);
+	return ( (Wire.read() << 4) + (Wire.read() >> 4) ) * 0.00125;
+}
+
 void MAX1704::showConfig(){
 
   int threshold = alertThreshold();
   boolean sleep = isSleeping();
   boolean alert = isAlerting();
   byte v = version();
-  
+
   Serial.print("Version = ");
   Serial.println(v, HEX);
   Serial.print("Sleep = ");
@@ -67,7 +76,7 @@ char MAX1704::version(){
   byte msb = 0;
   byte lsb = 0;
   readFrom(MAX1704_VERSION, msb, lsb);
-  
+
     value  = 0xFF00 & (msb<<8);
     value |=   0xFF & lsb;
 
@@ -111,18 +120,18 @@ boolean MAX1704::isSleeping(){
   byte lsb = 0;
 
   readFrom(MAX1704_CONFIG,msb,lsb);
-  byte sleep = (lsb >>7) & 0x01; 
+  byte sleep = (lsb >>7) & 0x01;
 
   return int(sleep) == 1;
 }
 
 void MAX1704::sleep(){
-  
+
 }
 
 void MAX1704::awake(){
- 
-  
+
+
 }
 
 void MAX1704::performCommand(byte address, int value){
@@ -149,8 +158,3 @@ void MAX1704::readFrom(byte address, byte &msb, byte &lsb){
   //}
   Wire.endTransmission();
 }
-
-
-
-
-
