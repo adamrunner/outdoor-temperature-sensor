@@ -1,9 +1,24 @@
 /*
-* MQTT Client
-* Reads temp from a DS18B20 Sensor
-* Sends the temp to MQTT Topic
-* Deep Sleeps until the RTC wakes it up (5 min)
+/*
+  MQTT Temperature Client
+  Hardware Setup:
+  DS18B20 Connected on Pin 2 / D3
+
+  OTA Uploads - default port of 8266
+  TEMP_SERVER - server IP
+  MQTT_PORT   - default of 1883
+
+  Requires definition of WIFI_HOME or WIFI_GARAGE for proper inclusion of SSID/PSK
+  
+  Reads temperature, battery, voltage every 5m and posts it to the "data" topic on the MQTT Server
+    - message has this format KEY:VALUE,KEY:VALUE,KEY:VALUE - e.g. "HOSTNAME:ESP_SDF897,TEMP:33.97,BATTERY:82.98"
+    - any key names can be used, key names cannot be repeated
+    - HOSTNAME is used to identify each sensor uniquely
+    - HOSTNAME is based off of the MAC addr of each sensor
+    - Deep Sleeps for TIME_TO_SLEEP (5 min), then RTC wakes it up, re-executes program again
 */
+
+#define WIFI_HOME
 
 #include <Wire.h>
 #include <ESP8266WiFi.h>
